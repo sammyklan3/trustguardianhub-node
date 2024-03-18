@@ -1,7 +1,10 @@
 const { app } = require("./config/middleware");
 require("dotenv").config();
+const express = require("express");
 const apiRoutes = require("./routes/routes");
 const http = require("http");
+
+app.use(express.json());
 
 const server = http.createServer(app);
 

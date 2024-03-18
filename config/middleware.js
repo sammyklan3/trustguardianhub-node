@@ -7,9 +7,19 @@ const path = require('path');
 const cors = require("cors");
 const { validationResult } = require("express-validator");
 const app = express();
+const multer = require("multer");
 
-// Parse application/json
-app.use(express.json());
+// Multer configuration for file upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "../public/");
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
 
 app.use((req, res, next) => {
     console.log(`Request received at ${new Date()}`);
@@ -96,4 +106,4 @@ const validateInputs = (req, res, next) => {
     next();
 };
 
-module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs };
+module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs, upload };
