@@ -28,7 +28,7 @@ const login = async (req, res, next) => {
             return res.status(401).json({ success: false, error: "Invalid username or password" });
         }
 
-        const token = jwt.sign({ userId: result.rows[0].user_id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ userId: result.rows[0].user_id, username: result.rows[0].username, email: result.rows[0].email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         return res.status(200).json({ success: true, message: "Successfully logged in", token });
     } catch (err) {
@@ -55,12 +55,12 @@ const signup = async (req, res, next) => {
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const insertUserQuery = "INSERT INTO users (user_id, username, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING user_id";
+        const insertUserQuery = "INSERT INTO users (user_id, username, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING user_id, email, username";
         const insertValues = [userId, username, email, hashedPassword];
 
         const result = await pool.query(insertUserQuery, insertValues);
 
-        const token = jwt.sign({ userId: result.rows[0].user_id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ userId: result.rows[0].user_id, email: result.rows[0].email, username: result.rows[0].username  }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         return res.status(200).json({ success: true, message: "User successfully added", token });
     } catch (err) {
