@@ -1,10 +1,12 @@
 const { Router } = require("express");
-const { login, signup, getUsers } = require("../controllers/authController");
+const { login, signup, getUsers, home } = require("../controllers/authController");
 const { createReport, getReports } = require("../controllers/reportController");
 
 const { verifyToken, upload } = require("../config/middleware");
 
 const router = Router();
+// Root route
+router.get("/", home);
 
 // User authentication routes
 router.post("/login", login);

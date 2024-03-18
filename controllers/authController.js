@@ -5,6 +5,10 @@ const { errorHandler, generateRandomAlphanumericId } = require("../config/middle
 
 const saltRounds = 10; // Number of salt rounds
 
+const home = async (req, res) => {
+    res.status(200).json({ success: true, message: "Welcome to the API" });
+};
+
 const login = async (req, res, next) => {
     try {
         if (!req.body.username || !req.body.password) {
@@ -80,4 +84,4 @@ const getUsers = async (req, res, next) => {
     }
 };
 
-module.exports = { login, signup, getUsers };
+module.exports = { login, signup, getUsers, home };
