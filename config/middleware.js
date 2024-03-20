@@ -2,80 +2,48 @@
 const express = require('express');
 const compression = require('compression');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const dotenv = require('dotenv');
 const path = require('path');
-const cors = require("cors");
 const { validationResult } = require("express-validator");
+dotenv.config();
+
 const app = express();
-const multer = require("multer");
 
-// Multer configuration for file upload
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "../public/");
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage: storage });
+app.use(express.json()); // Parse JSON request body
 
 app.use((req, res, next) => {
     console.log(`Request received at ${new Date()}`);
     next();
 });
 
-// Use compression middleware with configuration
-app.use(compression({
-    threshold: 10240, // Compress all responses that are at least 10KB in size (default is 1KB)
-    level: 6,         // Compression level (0-9), where 0 is no compression and 9 is maximum compression (default is -1, which uses zlib's default level)
-    memLevel: 8,      // Memory level (1-9) to balance memory usage and compression speed (default is 8)
-    chunkSize: 16384, // Chunk size (16KB by default), controls the size of internal buffering
-    filter: (req, res) => {
-        if (req.headers['x-no-compression']) {
-            // Don't compress responses if requested by the client
-            return false;
-        }
+app.use(compression()); // Use compression middleware without configuration
 
-        // Compress all other responses
-        return compression.filter(req, res);
-    }
-}));
-
-app.use(cors());
-
-// Serve static files from the '/public/assets' directory
+// Serve static files from the '/public' directory
 app.use('/public/', express.static(path.join(__dirname, '../public/')));
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {
-    if (req.headers.authorization) {
-        try {
-            const token = req.headers.authorization.split(" ")[1];
+    const token = req.headers.authorization && req.headers.authorization.split(" ")[1];
 
-            const secret = process.env.JWT_SECRET;
+    if (!token) {
+        return res.status(403).json({ success: false, message: "Token not provided" });
+    }
 
-            jwt.verify(token, secret, (err, decoded) => {
-                if (err) {
-                    if (err.name === 'TokenExpiredError') {
-                        return res.status(401).json({ success: false, message: "Token has expired" });
-                    } else {
-                        console.error("JWT verification error:", err);
-                        return res.status(403).json({ success: false, message: "Invalid token" });
-                    }
-                }
+    const secret = process.env.JWT_SECRET;
 
-                req.user = decoded;
-                next();
-            });
-        } catch (err) {
-            console.log(err.message); //error message here
-            res.status(401).json({ message: "Not authorized" });
+    jwt.verify(token, secret, (err, decoded) => {
+        if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ success: false, message: "Token has expired" });
+            } else {
+                console.error("JWT verification error:", err);
+                return res.status(403).json({ success: false, message: "Invalid token" });
+            }
         }
-    } else (
-        res.status(403).json({ success: false, message: "Token not provided" })
-    )
+
+        req.user = decoded;
+        next();
+    });
 }
 
 // Function to generate a random alphanumeric ID with a specific length
@@ -106,4 +74,4 @@ const validateInputs = (req, res, next) => {
     next();
 };
 
-module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs, upload };
+module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs };
