@@ -76,7 +76,7 @@ const createReport = async (req, res, next) => {
 
         return res.status(201).json({ success: true, data: result.rows[0] });
     } catch (err) {
-        errorHandler(err, req, res, next);
+        errorHandler(err);
     }
 };
 
@@ -106,7 +106,7 @@ const deleteReport = async (req, res, next) => {
     }
 };
 
-// Method to get a signle report
+// Method to get a single report with comments
 const getReport = async (req, res, next) => {
     try {
         const reportId = req.params.id;
@@ -115,8 +115,13 @@ const getReport = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Report ID is required" });
         }
 
-        // Prepare SQL query
-        const query = "SELECT * FROM reports WHERE report_id = $1";
+        // Prepare SQL query to select report and its associated comments
+        const query = `
+            SELECT r.*, c.*
+            FROM reports r
+            LEFT JOIN comments c ON r.report_id = c.report_id
+            WHERE r.report_id = $1
+        `;
         const values = [reportId];
 
         // Execute SQL query
@@ -126,20 +131,42 @@ const getReport = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Report not found" });
         }
 
+        // Extract report details from the first row
+        const report = {
+            id: result.rows[0].id,
+            report_id: result.rows[0].report_id,
+            title: result.rows[0].title,
+            description: result.rows[0].description,
+            image_url: result.rows[0].image_url,
+            user_id: result.rows[0].user_id,
+            created_at: result.rows[0].created_at,
+            comments: []
+        };
+
+        // Iterate over rows to extract comments
+        result.rows.forEach(row => {
+            // Exclude null comments (if any)
+            if (row.comment_id) {
+                report.comments.push({
+                    comment_id: row.comment_id,
+                    comment: row.comment,
+                    user_id: row.comment_user_id,
+                    created_at: row.comment_created_at
+                });
+            }
+        });
+
+        // Construct the full URL for the image
         const host = req.get("host");
         const protocol = req.protocol;
-
-        // Add the protocol and host to each image URL
-        const report = {
-            ...result.rows[0],
-            image_url: `${protocol}://${host}/public/${result.rows[0].image_url}`
-        };
+        report.image_url = `${protocol}://${host}/public/${report.image_url}`;
 
         return res.status(200).json({ success: true, data: report });
     } catch (err) {
         errorHandler(err, req, res, next);
     }
 };
+
 
 // Method for updating a report
 const updateReport = async (req, res, next) => {
@@ -173,5 +200,64 @@ const updateReport = async (req, res, next) => {
     }
 };
 
+const createComment = async (req, res, next) => {
+    try {
+        const reportId = req.params.id;
 
-module.exports = { getReports, createReport, deleteReport, getReport, updateReport };
+        if (!reportId) {
+            return res.status(400).json({ success: false, message: "Report ID is required" });
+        }
+
+        if (!req.body.comment || !req.body.userId) {
+            return res.status(400).json({ success: false, message: "Comment and user ID are required" });
+        }
+
+        const { comment, userId } = req.body;
+
+        // Generate comment ID
+        const commentId = generateRandomAlphanumericId(10);
+
+        // Prepare SQL query
+        const query = "INSERT INTO comments (comment_id, comment, user_id, report_id) VALUES ($1, $2, $3, $4) RETURNING *";
+        const values = [commentId, comment, userId, reportId];
+
+        // Execute SQL query
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Report not found" });
+        }
+
+        return res.status(201).json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        errorHandler(err);
+    }
+}
+
+const deleteComment = async (req, res) => {
+    try {
+        const commentId = req.params.id;
+
+        if (!commentId) {
+            return res.status(400).json({ success: false, message: "Comment ID is required" });
+        }
+
+        // Prepare SQL query
+        const query = "DELETE FROM comments WHERE comment_id = $1";
+        const values = [commentId];
+
+        // Execute SQL query
+        const result = await pool.query(query, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, message: "Comment not found" });
+        }
+
+        return res.status(200).json({ success: true, message: "Comment deleted successfully" });
+    } catch (err) {
+        errorHandler(err);
+    }
+}
+
+
+module.exports = { getReports, createReport, deleteReport, getReport, updateReport, createComment, deleteComment };

@@ -79,6 +79,10 @@ const getUsers = async (req, res) => {
 
         const result = await pool.query(query);
 
+        result.rows.forEach(user => {
+            user.profile_url = `${req.protocol}://${req.get("host")}/public/${user.profile_url}`; // Append the host and protocol to the profile URL
+        }); // Do something with each user
+
         return res.status(200).json({ success: true, data: result.rows });
     } catch (err) {
         errorHandler(err); // Pass error to the error handling middleware
@@ -124,11 +128,15 @@ const updateProfile = async (req, res) => {
 
         const imageResult = await pool.query(getImagequery, getImageValues);
 
-        if (imageResult.rows[0].profile_url) {
+        if (imageResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        else if (imageResult.rows[0].profile_url) {
             // If user has a profile image, delete it
             fs.unlinkSync(`./public/${imageResult.rows[0].profile_url}`);
         }
-        
+
         let query = "UPDATE users SET ";
         const values = [];
         const updateFields = [];
@@ -174,9 +182,25 @@ const deleteUser = async (req, res) => {
 
         const imageResult = await pool.query(getImagequery, getImageValues);
 
-        if (imageResult.rows[0].profile_url) {
+        if (imageResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        else if (imageResult.rows[0].profile_url) {
             // If user has a profile image, delete it
             fs.unlinkSync(`./public/${imageResult.rows[0].profile_url}`);
+        }
+
+        // Delete user's report images
+        const getReportImagesQuery = "SELECT image_url FROM reports WHERE user_id = $1";
+        const getReportImagesValues = [userId];
+
+        const reportImagesResult = await pool.query(getReportImagesQuery, getReportImagesValues);
+
+        if (reportImagesResult.rows.length > 0) {
+            reportImagesResult.rows.forEach(report => {
+                fs.unlinkSync(`./public/${report.image_url}`);
+            });
         }
 
         // Delete the user from the database
