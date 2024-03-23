@@ -48,4 +48,4 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## Contact
 
-For any questions or inquiries, please contact [sammyklane7@gmail.com] (EMAIL).
+For any questions or inquiries, please contact [sammyklane7@gmail.com].
