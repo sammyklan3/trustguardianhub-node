@@ -9,7 +9,7 @@ const getTags = async (req, res) => {
         const result = await pool.query(query);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "No tags found" });
+            return res.status(404).json({ success: false, error: "No tags found" });
         }
 
         return res.status(200).json({ success: true, data: result.rows });
@@ -22,7 +22,7 @@ const getTags = async (req, res) => {
 const createTag = async (req, res) => {
     try {
         if (!req.body.name) {
-            return res.status(400).json({ success: false, message: "Name is required" });
+            return res.status(400).json({ success: false, error: "Name is required" });
         }
 
         const tagId = generateRandomAlphanumericId(10);
@@ -35,7 +35,7 @@ const createTag = async (req, res) => {
         const checkResult = await pool.query(checkQuery, checkValues);
 
         if (checkResult.rows.length > 0) {
-            return res.status(400).json({ success: false, message: "Tag already exists" });
+            return res.status(400).json({ success: false, error: "Tag already exists" });
         }
 
         const query = "INSERT INTO tags (tag_id, tag_name) VALUES ($1, $2) RETURNING *";
@@ -53,9 +53,9 @@ const createTag = async (req, res) => {
 const updateTag = async (req, res) => {
     try {
         if (!req.body.name) {
-            return res.status(400).json({ success: false, message: "Name is required" });
+            return res.status(400).json({ success: false, error: "Name is required" });
         } else if (!req.params.id) {
-            return res.status(400).json({ success: false, message: "Tag ID is required" });
+            return res.status(400).json({ success: false, error: "Tag ID is required" });
         }
 
         const { name } = req.body;
@@ -67,7 +67,7 @@ const updateTag = async (req, res) => {
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Tag not found" });
+            return res.status(404).json({ success: false, error: "Tag not found" });
         }
 
         return res.status(200).json({ success: true, message: "Tag updated successfully" });
@@ -80,7 +80,7 @@ const updateTag = async (req, res) => {
 const deleteTag = async (req, res) => {
     try {
         if (!req.params.id) {
-            return res.status(400).json({ success: false, message: "Tag ID is required" });
+            return res.status(400).json({ success: false, error: "Tag ID is required" });
         }
 
         const { id } = req.params;
@@ -91,7 +91,7 @@ const deleteTag = async (req, res) => {
         const result = await pool.query(query, values);
 
         if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, message: "Tag not found" });
+            return res.status(404).json({ success: false, error: "Tag not found" });
         }
 
         return res.status(200).json({ success: true, message: "Tag deleted successfully" });

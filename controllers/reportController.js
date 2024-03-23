@@ -12,7 +12,7 @@ const getReports = async (req, res, next) => {
         const result = await pool.query(query);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "No reports found" });
+            return res.status(404).json({ success: false, error: "No reports found" });
         }
 
         const host = req.get("host");
@@ -36,16 +36,16 @@ const getReports = async (req, res, next) => {
 const createReport = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.description || !req.body.userId) {
-            return res.status(400).json({ success: false, message: "Title, description, and user ID are required" });
+            return res.status(400).json({ success: false, error: "Title, description, and user ID are required" });
         } else if (!req.file || !req.files) {
-            return res.status(400).json({ success: false, message: "Please upload an image" });
+            return res.status(400).json({ success: false, error: "Please upload an image" });
         }
 
         const { title, description, userId } = req.body;
         const { file, files } = req;
 
         if (file && files) {
-            return res.status(400).json({ success: false, message: "Please upload either a single image or multiple images, not both" });
+            return res.status(400).json({ success: false, error: "Please upload either a single image or multiple images, not both" });
         }
 
         // Handle image URLs
@@ -62,7 +62,7 @@ const createReport = async (req, res, next) => {
 
         // Check if there are no images uploaded
         if (imageUrls.length === 0) {
-            return res.status(400).json({ success: false, message: "Please upload at least one image" });
+            return res.status(400).json({ success: false, error: "Please upload at least one image" });
         }
 
         // Generate report ID
@@ -88,7 +88,7 @@ const deleteReport = async (req, res, next) => {
         const reportId = req.params.id;
 
         if (!reportId) {
-            return res.status(400).json({ success: false, message: "Report ID is required" });
+            return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
         const getImageQuery = "SELECT image_url FROM reports WHERE report_id = $1";
@@ -97,7 +97,7 @@ const deleteReport = async (req, res, next) => {
         const imageResult = await pool.query(getImageQuery, getImageValues);
 
         if (imageResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Report not found" });
+            return res.status(404).json({ success: false, error: "Report not found" });
         } else if (imageResult.rows[0].image_url) {
             if (Array.isArray(imageResult.rows[0].image_url)) {
                 const imageUrls = imageResult.rows[0].image_url.split(',');
@@ -129,7 +129,7 @@ const getReport = async (req, res, next) => {
         const reportId = req.params.id;
 
         if (!reportId) {
-            return res.status(400).json({ success: false, message: "Report ID is required" });
+            return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
         // Prepare SQL query to select report and its associated comments
@@ -145,7 +145,7 @@ const getReport = async (req, res, next) => {
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Report not found" });
+            return res.status(404).json({ success: false, error: "Report not found" });
         }
 
         // Extract report details from the first row
@@ -191,11 +191,11 @@ const updateReport = async (req, res, next) => {
         const reportId = req.params.id;
 
         if (!reportId) {
-            return res.status(400).json({ success: false, message: "Report ID is required" });
+            return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
         if (!req.body.title && !req.body.description) {
-            return res.status(400).json({ success: false, message: "Title or description is required" });
+            return res.status(400).json({ success: false, error: "Title or description is required" });
         }
 
         const { title, description } = req.body;
@@ -208,7 +208,7 @@ const updateReport = async (req, res, next) => {
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Report not found" });
+            return res.status(404).json({ success: false, error: "Report not found" });
         }
 
         return res.status(200).json({ success: true, data: result.rows[0] });
@@ -222,11 +222,11 @@ const createComment = async (req, res, next) => {
         const reportId = req.params.id;
 
         if (!reportId) {
-            return res.status(400).json({ success: false, message: "Report ID is required" });
+            return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
         if (!req.body.comment || !req.body.userId) {
-            return res.status(400).json({ success: false, message: "Comment and user ID are required" });
+            return res.status(400).json({ success: false, error: "Comment and user ID are required" });
         }
 
         const { comment, userId } = req.body;
@@ -242,7 +242,7 @@ const createComment = async (req, res, next) => {
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Report not found" });
+            return res.status(404).json({ success: false, error: "Report not found" });
         }
 
         return res.status(201).json({ success: true, data: result.rows[0] });
@@ -256,7 +256,7 @@ const deleteComment = async (req, res) => {
         const commentId = req.params.id;
 
         if (!commentId) {
-            return res.status(400).json({ success: false, message: "Comment ID is required" });
+            return res.status(400).json({ success: false, error: "Comment ID is required" });
         }
 
         // Prepare SQL query
@@ -267,7 +267,7 @@ const deleteComment = async (req, res) => {
         const result = await pool.query(query, values);
 
         if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, message: "Comment not found" });
+            return res.status(404).json({ success: false, error: "Comment not found" });
         }
 
         return res.status(200).json({ success: true, message: "Comment deleted successfully" });

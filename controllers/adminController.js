@@ -32,7 +32,7 @@ const adminReports = async (req, res) => {
         const result = await pool.query(query);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "No reports found" });
+            return res.status(404).json({ success: false, error: "No reports found" });
         }
 
         const host = req.get("host");

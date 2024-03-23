@@ -103,7 +103,7 @@ const getProfile = async (req, res) => {
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, error: "User not found" });
         }
 
         const host = req.get("host");
@@ -183,7 +183,7 @@ const deleteUser = async (req, res) => {
         const imageResult = await pool.query(getImagequery, getImageValues);
 
         if (imageResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, error: "User not found" });
         }
 
         else if (imageResult.rows[0].profile_url) {
