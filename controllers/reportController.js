@@ -89,16 +89,31 @@ const deleteReport = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Report ID is required" });
         }
 
+        const getImageQuery = "SELECT image_url FROM reports WHERE report_id = $1";
+        const getImageValues = [reportId];
+
+        const imageResult = await pool.query(getImageQuery, getImageValues);
+
+        if (imageResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Report not found" });
+        } else if (imageResult.rows[0].image_url) {
+            if (Array.isArray(imageResult.rows[0].image_url)) {
+                const imageUrls = imageResult.rows[0].image_url.split(',');
+                imageUrls.forEach(imageUrl => {
+                    fs.unlinkSync(`./public/${imageUrl}`);
+                });
+            } else {
+                fs.unlinkSync(`./public/${imageResult.rows[0].image_url}`);
+            }
+
+        }
+
         // Prepare SQL query
         const query = "DELETE FROM reports WHERE report_id = $1";
         const values = [reportId];
 
         // Execute SQL query
         const result = await pool.query(query, values);
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, message: "Report not found" });
-        }
 
         return res.status(200).json({ success: true, message: "Report deleted successfully" });
     } catch (err) {
