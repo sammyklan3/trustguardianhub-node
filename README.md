@@ -1,6 +1,6 @@
 # TrustGuardianHub Backend
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/license-GNU-blue.svg)](https://opensource.org/licenses/GNU)
 
 ## Description
 
@@ -48,4 +48,4 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## Contact
 
-For any questions or inquiries, please contact (sammyklane7@gmail.com).
+For any questions or inquiries, please contact [sammyklane7@gmail.com] (EMAIL).
