@@ -35,8 +35,10 @@ const getReports = async (req, res, next) => {
 // Method to create a report
 const createReport = async (req, res, next) => {
     try {
-        if (!req.body.title || !req.body.description || !req.body.userId || (!req.file && !req.files)) {
+        if (!req.body.title || !req.body.description || !req.body.userId) {
             return res.status(400).json({ success: false, message: "Title, description, and user ID are required" });
+        } else if (!req.file || !req.files) {
+            return res.status(400).json({ success: false, message: "Please upload an image" });
         }
 
         const { title, description, userId } = req.body;
