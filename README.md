@@ -1,6 +1,6 @@
 # TrustGuardianHub Backend
 
-[![License](https://img.shields.io/badge/license-GNU-blue.svg)](https://opensource.org/licenses/GNU)
+[![License](https://img.shields.io/badge/license-GNU-blue.svg)](https://opensource.org/license/gpl-3-0)
 
 ## Description
 
