@@ -17,7 +17,7 @@ TrustGuardianHub Backend is a server-side application that powers the TrustGuard
 
 - Node.js
 - Express.js
-- MongoDB (or any other database of your choice)
+- PostgreSQL (or any other database of your choice)
 - JSON Web Tokens (JWT) for authentication
 - Other libraries and frameworks as needed
 
@@ -44,8 +44,8 @@ Contributions are welcome! If you'd like to contribute to TrustGuardianHub Backe
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## Contact
 
-For any questions or inquiries, please contact [your-email-address].
+For any questions or inquiries, please contact (sammyklane7@gmail.com).
