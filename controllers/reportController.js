@@ -6,8 +6,12 @@ const { errorHandler, generateRandomAlphanumericId } = require("../config/middle
 // Method to get all reports
 const getReports = async (req, res, next) => {
     try {
-        // Your SQL query to retrieve reports from the database
-        const query = "SELECT * FROM reports";
+        // Your SQL query to retrieve reports and user details from the database
+        const query = `
+            SELECT r.*, u.username, u.profile_url
+            FROM reports r
+            INNER JOIN users u ON r.user_id = u.user_id
+        `;
 
         const result = await pool.query(query);
 
@@ -19,30 +23,36 @@ const getReports = async (req, res, next) => {
         const protocol = req.protocol;
 
         // Add the protocol and host to each image URL
-        const reportsWithUrls = result.rows.map(report => {
+        const reportsWithUrlsAndUserDetails = result.rows.map(report => {
             return {
                 ...report,
                 image_url: `${protocol}://${host}/public/${report.image_url}`
             };
         });
 
-        return res.status(200).json({ success: true, data: reportsWithUrls });
+        return res.status(200).json({ success: true, data: reportsWithUrlsAndUserDetails });
     } catch (err) {
         errorHandler(err, res); // Pass error to the error handling middleware
     }
 };
 
+
 // Method to create a report
 const createReport = async (req, res, next) => {
     try {
         if (!req.body.title || !req.body.description || !req.body.userId) {
+            if (req.file || req.files) {
+                fs.unlinkSync(`./public/${req.file.filename || req.files.filename}`); // Delete the uploaded file
+            }
             return res.status(400).json({ success: false, error: "Title, description, and user ID are required" });
-        } else if (!req.file || !req.files) {
-            return res.status(400).json({ success: false, error: "Please upload an image" });
         }
 
         const { title, description, userId } = req.body;
         const { file, files } = req;
+
+        if (!file && !files) {
+            return res.status(400).json({ success: false, error: "Please upload an image" });
+        }
 
         if (file && files) {
             return res.status(400).json({ success: false, error: "Please upload either a single image or multiple images, not both" });
@@ -76,7 +86,7 @@ const createReport = async (req, res, next) => {
         // Execute SQL query
         const result = await pool.query(query, values);
 
-        return res.status(201).json({ success: true, data: result.rows[0] });
+        return res.status(200).json({ success: true, message: "Report created successfully"});
     } catch (err) {
         errorHandler(err);
     }

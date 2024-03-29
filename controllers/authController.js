@@ -18,13 +18,22 @@ const login = async (req, res) => {
 
         const { username, password } = req.body;
 
-        const query = "SELECT * FROM users WHERE username = $1";
-        const values = [username];
+        // Check if the credentials belong to a user
+        let query = "SELECT * FROM users WHERE username = $1";
+        let values = [username];
+        let result = await pool.query(query, values);
 
-        const result = await pool.query(query, values);
+        let role = 'user'; // Default role is user
 
         if (result.rows.length === 0) {
-            return res.status(401).json({ success: false, error: "This user doesn't exist" });
+            // If the credentials don't belong to a user, check if they belong to an admin
+            query = "SELECT * FROM admins WHERE username = $1";
+            result = await pool.query(query, values);
+            role = 'admin'; // Set role to admin if found in admins table
+        }
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, error: "Invalid username or password" });
         }
 
         const match = await bcrypt.compare(password, result.rows[0].password_hash);
@@ -33,13 +42,22 @@ const login = async (req, res) => {
             return res.status(401).json({ success: false, error: "Invalid username or password" });
         }
 
-        const token = jwt.sign({ userId: result.rows[0].user_id, username: result.rows[0].username, email: result.rows[0].email }, process.env.JWT_SECRET, { expiresIn: "14d" });
+        // Generate token based on role
+        const tokenPayload = {
+            userId: result.rows[0].user_id,
+            username: result.rows[0].username,
+            email: result.rows[0].email,
+            role: role // Include role in JWT payload
+        };
 
-        return res.status(200).json({ success: true, message: "Successfully logged in", token });
+        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "14d" });
+
+        return res.status(200).json({ success: true, message: "Successfully logged in", token});
     } catch (err) {
         errorHandler(err); // Pass error to the error handling middleware
     }
 };
+
 
 const signup = async (req, res) => {
     try {
