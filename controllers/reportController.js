@@ -143,15 +143,16 @@ const deleteReport = async (req, res, next) => {
 const getReport = async (req, res, next) => {
     try {
         const reportId = req.params.id;
-
+        
         if (!reportId) {
             return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
-        // Prepare SQL query to select report and its associated comments
+        // Prepare SQL query to select report, user details, and comments
         const query = `
-            SELECT r.*, c.*
+            SELECT r.*, u.username, u.profile_url, c.*
             FROM reports r
+            LEFT JOIN users u ON r.user_id = u.user_id
             LEFT JOIN comments c ON r.report_id = c.report_id
             WHERE r.report_id = $1
         `;
@@ -164,6 +165,11 @@ const getReport = async (req, res, next) => {
             return res.status(404).json({ success: false, error: "Report not found" });
         }
 
+        // Construct the full URL for the image
+        const host = req.get("host");
+        const protocol = req.protocol;
+
+
         // Extract report details from the first row
         const report = {
             id: result.rows[0].id,
@@ -172,6 +178,8 @@ const getReport = async (req, res, next) => {
             description: result.rows[0].description,
             image_url: result.rows[0].image_url,
             user_id: result.rows[0].user_id,
+            username: result.rows[0].username, // Add username from the query result
+            profile_url: `${protocol}://${host}/public/${result.rows[0].profile_url}`,
             created_at: result.rows[0].created_at,
             comments: []
         };
@@ -189,9 +197,7 @@ const getReport = async (req, res, next) => {
             }
         });
 
-        // Construct the full URL for the image
-        const host = req.get("host");
-        const protocol = req.protocol;
+        
         report.image_url = `${protocol}://${host}/public/${report.image_url}`;
 
         return res.status(200).json({ success: true, data: report });
