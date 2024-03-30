@@ -86,13 +86,12 @@ const createReport = async (req, res, next) => {
         // Execute SQL query
         const result = await pool.query(query, values);
 
-        return res.status(200).json({ success: true, message: "Report created successfully"});
+        return res.status(200).json({ success: true, message: "Report created successfully" });
     } catch (err) {
         errorHandler(err);
     }
 };
 
-// Method to delete a report
 const deleteReport = async (req, res, next) => {
     try {
         const reportId = req.params.id;
@@ -109,15 +108,22 @@ const deleteReport = async (req, res, next) => {
         if (imageResult.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Report not found" });
         } else if (imageResult.rows[0].image_url) {
-            if (Array.isArray(imageResult.rows[0].image_url)) {
-                const imageUrls = imageResult.rows[0].image_url.split(',');
-                imageUrls.forEach(imageUrl => {
-                    fs.unlinkSync(`./public/${imageUrl}`);
-                });
-            } else {
-                fs.unlinkSync(`./public/${imageResult.rows[0].image_url}`);
+            try {
+                if (Array.isArray(imageResult.rows[0].image_url)) {
+                    const imageUrls = imageResult.rows[0].image_url.split(',');
+                    imageUrls.forEach(imageUrl => {
+                        if (fs.existsSync(`./public/${imageUrl}`)) {
+                            fs.unlinkSync(`./public/${imageUrl}`);
+                        }
+                    });
+                } else {
+                    if (fs.existsSync(`./public/${imageResult.rows[0].image_url}`)) {
+                        fs.unlinkSync(`./public/${imageResult.rows[0].image_url}`);
+                    }
+                }
+            } catch (err) {
+                console.error("Error deleting file:", err);
             }
-
         }
 
         // Prepare SQL query
@@ -129,9 +135,9 @@ const deleteReport = async (req, res, next) => {
 
         return res.status(200).json({ success: true, message: "Report deleted successfully" });
     } catch (err) {
-        errorHandler(err, req, res, next);
+        errorHandler(err);
     }
-};
+}
 
 // Method to get a single report with comments
 const getReport = async (req, res, next) => {
@@ -194,38 +200,72 @@ const getReport = async (req, res, next) => {
     }
 };
 
-
-// Method for updating a report
 const updateReport = async (req, res, next) => {
     try {
         const reportId = req.params.id;
-
-        if (!reportId) {
-            return res.status(400).json({ success: false, error: "Report ID is required" });
-        }
-
-        if (!req.body.title && !req.body.description) {
-            return res.status(400).json({ success: false, error: "Title or description is required" });
-        }
-
         const { title, description } = req.body;
+        const { file } = req;
 
-        // Prepare SQL query
-        const query = "UPDATE reports SET title = $1, description = $2 WHERE report_id = $3 RETURNING *";
-        const values = [title, description, reportId];
+        const getImageQuery = "SELECT image_url FROM reports WHERE report_id = $1";
+        const getImageValues = [reportId];
 
-        // Execute SQL query
+        const imageResult = await pool.query(getImageQuery, getImageValues);
+
+        if (imageResult.rows.length === 0) {
+            if (file) {
+                try {
+                    if (fs.existsSync(`./public/${file.filename}`)) {
+                        fs.unlinkSync(`./public/${file.filename}`);
+                    }
+                } catch (err) {
+                    console.error("Error deleting file:", err);
+                }
+            }
+            return res.status(404).json({ success: false, error: "Report not found" });
+        } else if (imageResult.rows[0].image_url) {
+            try {
+                if (fs.existsSync(`./public/${imageResult.rows[0].image_url}`)) {
+                    fs.unlinkSync(`./public/${imageResult.rows[0].image_url}`);
+                }
+            } catch (err) {
+                console.error("Error deleting file:", err);
+            }
+        }
+
+        let query = "UPDATE reports SET ";
+        const values = [];
+        const updateFields = [];
+
+        // Build the SET clause dynamically for the SQL query
+        let paramCounter = 1; // Start parameter counter at 1
+        if (title) {
+            updateFields.push(`title = $${paramCounter++}`);
+            values.push(title);
+        }
+        if (description) {
+            updateFields.push(`description = $${paramCounter++}`);
+            values.push(description);
+        }
+        if (file) {
+            updateFields.push(`image_url = $${paramCounter++}`);
+            values.push(file.filename);
+        }
+        if (updateFields.length === 0) {
+            return res.status(400).json({ success: false, error: "No fields provided for update" });
+        }
+
+        query += updateFields.join(', ') + ` WHERE report_id = $${paramCounter++} RETURNING *`;
+        values.push(reportId);
+
         const result = await pool.query(query, values);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: "Report not found" });
-        }
-
-        return res.status(200).json({ success: true, data: result.rows[0] });
+        return res.status(200).json({ success: true, message: "Report updated successfully" });
     } catch (err) {
-        errorHandler(err, req, res, next);
+        console.error("Error updating report:", err);
+        return res.status(500).json({ success: false, error: "An error occurred while updating report" });
     }
 };
+
 
 const createComment = async (req, res, next) => {
     try {

@@ -22,7 +22,7 @@ router.get("/users", verifyToken, getUsers);
 router.get("/reports", verifyToken, getReports);
 router.get("/reports/:id", verifyToken, getReport);
 router.delete("/reports/:id", verifyToken, deleteReport);
-router.put("/reports/:id", verifyToken, updateReport);
+router.patch("/reports/:id", verifyToken,upload.single("image"), updateReport);
 router.post("/create", verifyToken, upload.single("image"), createReport);
 router.post("/comments/:id", verifyToken, createComment);
 router.delete("/comments/:id", verifyToken, deleteComment);

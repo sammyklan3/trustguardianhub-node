@@ -147,12 +147,23 @@ const updateProfile = async (req, res) => {
         const imageResult = await pool.query(getImagequery, getImageValues);
 
         if (imageResult.rows.length === 0) {
+            if (file) {
+                try {
+                    fs.unlinkSync(`./public/${file.filename}`);
+                } catch (err) {
+                    console.error("Error deleting file:", err);
+                }
+            }
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
         else if (imageResult.rows[0].profile_url) {
             // If user has a profile image, delete it
-            fs.unlinkSync(`./public/${imageResult.rows[0].profile_url}`);
+            try {
+                fs.unlinkSync(`./public/${imageResult.rows[0].profile_url}`);
+            } catch (err) {
+                console.error("Error deleting file:", err);
+            }
         }
 
         let query = "UPDATE users SET ";
@@ -184,11 +195,13 @@ const updateProfile = async (req, res) => {
 
         const result = await pool.query(query, values);
 
-        return res.status(200).json({ success: true, data: result.rows[0] });
+        return res.status(200).json({ success: true, message: "Profile updated successfully" });
     } catch (err) {
-        errorHandler(err); // Pass error to the error handling middleware
+        console.error("Error updating profile:", err);
+        return res.status(500).json({ success: false, message: "An error occurred while updating profile" });
     }
 };
+
 
 const deleteUser = async (req, res) => {
     try {
