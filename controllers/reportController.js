@@ -181,7 +181,8 @@ const getReport = async (req, res, next) => {
             username: result.rows[0].username, // Add username from the query result
             profile_url: `${protocol}://${host}/public/${result.rows[0].profile_url}`,
             created_at: result.rows[0].created_at,
-            comments: []
+            comments: [],
+            likes: result.rows[0].likes
         };
 
         // Iterate over rows to extract comments
