@@ -143,18 +143,21 @@ const deleteReport = async (req, res, next) => {
 const getReport = async (req, res, next) => {
     try {
         const reportId = req.params.id;
-        
+
         if (!reportId) {
             return res.status(400).json({ success: false, error: "Report ID is required" });
         }
 
         // Prepare SQL query to select report, user details, and comments
         const query = `
-            SELECT r.*, u.username, u.profile_url, c.*
-            FROM reports r
-            LEFT JOIN users u ON r.user_id = u.user_id
-            LEFT JOIN comments c ON r.report_id = c.report_id
-            WHERE r.report_id = $1
+        SELECT r.*, u.username AS report_username, u.profile_url AS report_profile_url,
+        c.*, uc.username AS comment_username, uc.profile_url AS comment_profile_url
+        FROM reports r
+        LEFT JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN comments c ON r.report_id = c.report_id
+        LEFT JOIN users uc ON c.user_id = uc.user_id
+        WHERE r.report_id = $1
+ 
         `;
         const values = [reportId];
 
@@ -192,13 +195,16 @@ const getReport = async (req, res, next) => {
                 report.comments.push({
                     comment_id: row.comment_id,
                     comment: row.comment,
-                    user_id: row.comment_user_id,
-                    created_at: row.comment_created_at
+                    user_id: row.user_id,
+                    username: row.comment_username, // Add username from the query result
+                    profile_url: `${protocol}://${host}/public/${row.comment_profile_url}`, // Add profile URL from the query result
+                    created_at: row.created_at
                 });
             }
         });
 
-        
+
+
         report.image_url = `${protocol}://${host}/public/${report.image_url}`;
 
         return res.status(200).json({ success: true, data: report });
