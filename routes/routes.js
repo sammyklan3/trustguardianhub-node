@@ -3,8 +3,9 @@ const { login, signup, getUsers, home, getProfile, updateProfile, deleteUser } =
 const { createReport, getReports, deleteReport, getReport, updateReport, createComment, deleteComment } = require("../controllers/reportController");
 const { getTags, createTag, updateTag, deleteTag } = require("../controllers/tagController");
 const { adminDashboard, adminReports } = require("../controllers/adminController");
+const { initiateSTKPush, stkPushCallback, confirmPayment } = require("../controllers/lipanampesaController");
 const { upload } = require("../config/multer");
-const { verifyToken } = require("../config/middleware");
+const { verifyToken, accessToken } = require("../config/middleware");
 
 const router = Router();
 // Root route
@@ -22,7 +23,7 @@ router.get("/users", verifyToken, getUsers);
 router.get("/reports", verifyToken, getReports);
 router.get("/reports/:id", verifyToken, getReport);
 router.delete("/reports/:id", verifyToken, deleteReport);
-router.patch("/reports/:id", verifyToken,upload.single("image"), updateReport);
+router.patch("/reports/:id", verifyToken, upload.single("image"), updateReport);
 router.post("/create", verifyToken, upload.single("image"), createReport);
 router.post("/comments/:id", verifyToken, createComment);
 router.delete("/comments/:id", verifyToken, deleteComment);
@@ -36,5 +37,10 @@ router.delete("/tags/:id/delete", verifyToken, deleteTag);
 // Admin controller routes
 router.get("/admin/dashboard", verifyToken, adminDashboard);
 router.get("/admin/reports", verifyToken, adminReports);
+
+// Lipa na Mpesa controller routes
+router.post("/stkPush", verifyToken, accessToken, initiateSTKPush);
+router.post("/stkPushCallback/:Order_ID", verifyToken, stkPushCallback);
+router.post("/confirmPayment/:CheckoutRequestID", verifyToken, accessToken, confirmPayment)
 
 module.exports = router;

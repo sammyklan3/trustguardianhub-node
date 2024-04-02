@@ -45,6 +45,31 @@ function verifyToken(req, res, next) {
     });
 }
 
+async function accessToken(req, res, next) {
+    try {
+        const url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
+        const auth = Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
+
+        const response = await fetch(url, {
+            headers: {
+                "Authorization": "Basic " + auth
+            }
+        });
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(errorMessage || "Something went wrong when trying to process your payment");
+        }
+
+        const responseBody = await response.json();
+        req.safaricom_access_token = responseBody.access_token;
+        next();
+    } catch (error) {
+        errorHandler(error);
+    }
+};
+
+
 // Function to generate a random alphanumeric ID with a specific length
 function generateRandomAlphanumericId(length) {
     const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -73,4 +98,4 @@ const validateInputs = (req, res, next) => {
     next();
 };
 
-module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs };
+module.exports = { app, verifyToken, generateRandomAlphanumericId, errorHandler, validateInputs, accessToken };
