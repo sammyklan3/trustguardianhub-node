@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 
 app.use(express.json()); // Parse JSON request body
+app.use(express.urlencoded());
 
 app.use((req, res, next) => {
     console.log(`Request received at ${new Date()}`);

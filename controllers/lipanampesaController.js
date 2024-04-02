@@ -1,9 +1,10 @@
 const dotenv = require('dotenv');
 const getTimestamp = require("../utils/utils.timestamp");
 const { errorHandler } = require("../config/middleware");
-dotenv.config();
 const ngrok = require("ngrok");
+dotenv.config();
 const fetch = require("node-fetch");
+
 
 // @desc initiate stk push
 // @method POST
@@ -24,8 +25,8 @@ const initiateSTKPush = async (req, res) => {
         //shortcode + passkey + timestamp
         const password = Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString("base64");
 
-        // create callback url
-        const callback_url = await ngrok.connect(process.env.PORT);
+        // Create the callback URL dynamically
+        const callback_url = `${req.protocol}://${req.get('host')}/stkPushCallback/${Order_ID}`;
 
         console.log("callback ", callback_url);
 
@@ -44,7 +45,7 @@ const initiateSTKPush = async (req, res) => {
                 "PartyA": phone,
                 "PartyB": process.env.BUSINESS_SHORT_CODE,
                 "PhoneNumber": phone,
-                "CallBackURL": `${callback_url}/api/stkPushCallback/${Order_ID}`,
+                "CallBackURL": callback_url,
                 "AccountReference": "TrustGuardianHub",
                 "TransactionDesc": "Paid online"
             })
@@ -56,6 +57,7 @@ const initiateSTKPush = async (req, res) => {
         errorHandler(e);
     }
 };
+
 
 // @desc callback route Safaricom will post transaction status
 // @method POST
