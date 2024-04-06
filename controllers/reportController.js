@@ -181,12 +181,13 @@ const getReport = async (req, res, next) => {
             description: result.rows[0].description,
             image_url: result.rows[0].image_url,
             user_id: result.rows[0].user_id,
-            username: result.rows[0].username, // Add username from the query result
-            profile_url: `${protocol}://${host}/public/${result.rows[0].profile_url}`,
+            username: result.rows[0].report_username, // Change to report_username from the query result
+            profile_url: `${protocol}://${host}/public/${result.rows[0].report_profile_url}`, // Change to report_profile_url from the query result
             created_at: result.rows[0].created_at,
             comments: [],
             likes: result.rows[0].likes
         };
+
 
         // Iterate over rows to extract comments
         result.rows.forEach(row => {

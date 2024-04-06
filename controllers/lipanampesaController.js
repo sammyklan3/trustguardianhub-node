@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 const getTimestamp = require("../utils/utils.timestamp");
-const { errorHandler } = require("../config/middleware");
+const { errorHandler, generateRandomAlphanumericId } = require("../config/middleware");
 const ngrok = require("ngrok");
 dotenv.config();
 const fetch = require("node-fetch");
@@ -12,11 +12,13 @@ const fetch = require("node-fetch");
 // @access public
 const initiateSTKPush = async (req, res) => {
     try {
-        const { amount, phone, Order_ID } = req.body;
+        const { amount, phone} = req.body;
 
-        if (!amount || !phone || !Order_ID) {
+        if (!amount || !phone) {
             return res.status(400).json({ success: false, message: "Please provide all required fields" });
         }
+
+        const Order_ID = generateRandomAlphanumericId(10);
 
         const url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
         const auth = "Bearer " + req.safaricom_access_token;
@@ -79,7 +81,7 @@ const stkPushCallback = async (req, res) => {
             ResultDesc,
             CallbackMetadata
         } = req.body.Body.stkCallback;
-
+        
         // get the meta data from the meta
         const meta = Object.values(await CallbackMetadata.Item);
         const PhoneNumber = meta.find(o => o.Name === 'PhoneNumber').Value.toString();
