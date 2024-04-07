@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 
 app.use(express.json()); // Parse JSON request body
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request body
 
 app.use((req, res, next) => {
     console.log(`Request received at ${new Date()}`);
@@ -51,21 +52,18 @@ async function accessToken(req, res, next) {
         const auth = Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
 
         const response = await fetch(url, {
+            method: "GET",
             headers: {
-                "Authorization": "Basic " + auth
+                "Authorization": `Basic ${auth}`
             }
         });
-
-        if (!response.ok) {
-            const errorMessage = await response.text();
-            throw new Error(errorMessage || "Something went wrong when trying to process your payment");
-        }
 
         const responseBody = await response.json();
         req.safaricom_access_token = responseBody.access_token;
         next();
     } catch (error) {
-        errorHandler(error);
+        console.log(error);
+        return res.status(500).json({success: false, error: "Failed to initiate payment"});
     }
 };
 
