@@ -41,6 +41,6 @@ router.get("/admin/reports", verifyToken, adminReports);
 // Lipa na Mpesa controller routes
 router.post("/stkPush", verifyToken, accessToken, initiateSTKPush);
 router.post("/stkPushCallback/:paymentId", stkPushCallback);
-router.post("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPayment)
+router.get("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPayment)
 
 module.exports = router;

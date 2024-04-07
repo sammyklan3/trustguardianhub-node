@@ -61,9 +61,10 @@ async function accessToken(req, res, next) {
         const responseBody = await response.json();
         req.safaricom_access_token = responseBody.access_token;
         next();
+        
     } catch (error) {
         console.log(error);
-        return res.status(500).json({success: false, error: "Failed to initiate payment"});
+        return res.status(500).json({ success: false, error: "Failed to initiate payment" });
     }
 };
 

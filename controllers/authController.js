@@ -61,11 +61,12 @@ const login = async (req, res) => {
 
 const signup = async (req, res) => {
     try {
-        if (!req.body.username || !req.body.email || !req.body.password) {
+        const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
             return res.status(400).json({ success: false, error: "Username, email, and password are required." });
         }
 
-        const { username, email, password } = req.body;
         const userId = generateRandomAlphanumericId(10);
 
         const checkUserQuery = "SELECT * FROM users WHERE username = $1 OR email = $2";
@@ -115,7 +116,7 @@ const getProfile = async (req, res) => {
         }
         const userId = req.user.userId;
 
-        const query = "SELECT user_id, email, username, profile_url FROM users WHERE user_id = $1";
+        const query = "SELECT user_id, email, username, profile_url, phone, tier FROM users WHERE user_id = $1";
         const values = [userId];
 
         const result = await pool.query(query, values);

@@ -40,7 +40,7 @@ const initiateSTKPush = async (req, res) => {
             // const api = ngrok.getApi();
             // await api.listTunnels();
 
-            callback_url = "https://6337-2c0f-fe38-2185-310c-a8e7-6ec5-fdb1-584.ngrok-free.app";
+            callback_url = "https://2b36-102-219-210-90.ngrok-free.app";
 
         } else {
             const host = req.get("host");
@@ -100,18 +100,9 @@ const initiateSTKPush = async (req, res) => {
 const stkPushCallback = async (req, res) => {
     try {
         const { paymentId } = req.params;
-
-        if (!paymentId) {
-            return res.status(400).json({ success: false, error: "Payment ID is required" });
-        };
-
         const callbackData = req.body;
-
+        
         console.log(callbackData);
-
-        if (!callbackData) {
-            return res.status(400).json({ success: false, error: "No data received" });
-        }
 
         // Check the result code
         const result_code = callbackData.Body.stkCallback.ResultCode;
@@ -165,7 +156,7 @@ const stkPushCallback = async (req, res) => {
             case "premium_tier_package":
                 tier = "PREMIUM";
                 break;
-            case "basic-tier_package":
+            case "basic_tier_package":
                 tier = "BASIC";
                 break;
             case "standard_tier_package":
@@ -200,18 +191,36 @@ const confirmPayment = async (req, res) => {
         const { paymentId } = req.params;
         if (!paymentId) {
             return res.status(400).json({ success: false, error: "Payment ID is required" });
-        };
+        }
+
         // Query the database to check payment status based on paymentId
-        const query = "SELECT status FROM payments WHERE payment_id = $1";
+        const query = "SELECT status, last_update FROM payments WHERE payment_id = $1";
         const result = await pool.query(query, [paymentId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Payment not found" });
         }
-        return res.status(200).json({ success: true, status: result.rows[0].status });
+
+        const paymentStatus = result.rows[0].status;
+        const lastUpdate = result.rows[0].last_update;
+
+        // Compare current time with the last update time
+        const currentTime = new Date();
+        const timeDifferenceInSeconds = Math.abs((currentTime - lastUpdate) / 1000);
+
+        // If no change in status for more than X seconds (e.g., 300 seconds = 5 minutes), delete the record
+        const maxTimeWithoutChange = 60; // 1 minute
+        if (timeDifferenceInSeconds > maxTimeWithoutChange) {
+            // Delete the record from the database
+            await pool.query("DELETE FROM payments WHERE payment_id = $1", [paymentId]);
+            return res.status(200).json({ success: true, message: "Payment record deleted due to inactivity" });
+        }
+
+        return res.status(200).json({ success: true, status: paymentStatus });
     } catch (error) {
         errorHandler(error);
     }
 };
+
 
 module.exports = {
     initiateSTKPush,
