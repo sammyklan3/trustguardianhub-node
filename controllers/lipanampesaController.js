@@ -40,7 +40,7 @@ const initiateSTKPush = async (req, res) => {
             // const api = ngrok.getApi();
             // await api.listTunnels();
 
-            callback_url = "https://2b36-102-219-210-90.ngrok-free.app";
+            callback_url = "https://dabe-197-136-58-40.ngrok-free.app";
 
         } else {
             const host = req.get("host");

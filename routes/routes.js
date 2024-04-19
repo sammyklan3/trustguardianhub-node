@@ -4,6 +4,7 @@ const { createReport, getReports, deleteReport, getReport, updateReport, createC
 const { getTags, createTag, updateTag, deleteTag } = require("../controllers/tagController");
 const { adminDashboard, adminReports } = require("../controllers/adminController");
 const { initiateSTKPush, stkPushCallback, confirmPayment } = require("../controllers/lipanampesaController");
+const { searchEngine } = require("../controllers/searchEngineController");
 const { upload } = require("../config/multer");
 const { verifyToken, accessToken } = require("../config/middleware");
 
@@ -41,6 +42,8 @@ router.get("/admin/reports", verifyToken, adminReports);
 // Lipa na Mpesa controller routes
 router.post("/stkPush", verifyToken, accessToken, initiateSTKPush);
 router.post("/stkPushCallback/:paymentId", stkPushCallback);
-router.get("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPayment)
+router.get("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPayment);
 
+// Search route
+router.get("/search", verifyToken, searchEngine);
 module.exports = router;
