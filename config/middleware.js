@@ -23,6 +23,12 @@ app.use(compression()); // Use compression middleware without configuration
 // Serve static files from the '/public' directory
 app.use('/public/', express.static(path.join(__dirname, '../public/')));
 
+let allowedOrigins = [];
+
+if (process.env.NODE_ENV === "production") {
+    allowedOrigins = ["https://trustguardianhub.vercel.app"];
+}
+
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) {
@@ -44,11 +50,11 @@ const corsOptions = {
 };
 
 if (process.env.NODE_ENV === "production") {
-    const allowedOrigins = ["https://trustguardianhub.vercel.app"];
     app.use(cors(corsOptions));
 } else {
     app.use(cors());
 }
+
 
 
 // Middleware to verify JWT
