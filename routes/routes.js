@@ -4,7 +4,7 @@ const { createReport, getReports, deleteReport, getReport, updateReport, createC
 const { getTags, createTag, updateTag, deleteTag } = require("../controllers/tagController");
 const { adminDashboard, adminReports } = require("../controllers/adminController");
 const { initiateSTKPush, stkPushCallback, confirmPayment } = require("../controllers/lipanampesaController");
-const { searchEngine } = require("../controllers/searchEngineController");
+const { searchEngine, deleteSearch, getPastSearches } = require("../controllers/searchEngineController");
 const { upload } = require("../config/multer");
 const { verifyToken, accessToken } = require("../config/middleware");
 
@@ -46,4 +46,7 @@ router.get("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPaymen
 
 // Search route
 router.get("/search", verifyToken, searchEngine);
+router.get("/pastSearches", verifyToken, getPastSearches);
+router.delete("/pastSearches", verifyToken, deleteSearch);
+
 module.exports = router;

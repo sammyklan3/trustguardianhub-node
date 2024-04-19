@@ -4,6 +4,7 @@ const compression = require('compression');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
 const { validationResult } = require("express-validator");
 dotenv.config();
 
@@ -21,6 +22,23 @@ app.use(compression()); // Use compression middleware without configuration
 
 // Serve static files from the '/public' directory
 app.use('/public/', express.static(path.join(__dirname, '../public/')));
+
+// CORS middleware
+if (process.env.NODE_ENV === "production") {
+    const allowedOrigins = ["https://trustguardianhub.vercel.app/"]; // Replace with your specific file URL
+    app.use(cors({
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    }));
+} else {
+    // Allow all origins in development mode
+    app.use(cors());
+}
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {

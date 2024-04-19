@@ -1,10 +1,49 @@
 const { errorHandler, generateRandomAlphanumericId } = require("../config/middleware");
 const { pool } = require("../config/db");
-const ngrok = require("ngrok");
-const fetch = require("node-fetch");
 
+// Returning past searched values
+const getPastSearches = async (req, res) => {
+    try {
+        const query = "SELECT * FROM searches";
+
+        const result = await pool.query(query);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "No past searches found" });
+        }
+
+        return res.status(200).json(result.rows);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, error: "An error occurred with the past searches query" });
+    }
+}
+
+// Deleting from past searches
+const deleteSearch = async (req, res) => {
+    try {
+        if (!req.params.id) {
+            return res.status(400).json({ success: false, error: "Search ID is required" });
+        }
+
+        const { id } = req.params;
+        const query = "DELETE FROM searches WHERE search_id = $1";
+
+        const result = await pool.query(query, [id]);
+
+        return res.status(200).json({ success: true, message: "Search deleted successfully" });
+
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, error: "An error occurred with the delete search query" });
+    }
+}
+
+// Search engine functionality
 const searchEngine = async (req, res) => {
     const { query: searchQuery } = req.query; // Renamed to searchQuery to avoid conflict
+    const { userId } = req.user;
 
     if (!searchQuery) {
         return res.status(400).json({ success: false, error: "Search query is required" });
@@ -32,6 +71,17 @@ const searchEngine = async (req, res) => {
 
         const result = await pool.query(sqlQuery, [`%${searchQuery}%`]); // Pass the actual value of searchQuery
 
+        const search_id = generateRandomAlphanumericId(10);
+
+        const addSearch = "INSERT INTO searches (search_id, search_query, user_id) VALUES ($1, $2, $3) RETURNING *";
+        const values = [search_id, searchQuery, userId];
+
+        const insertSearchQuery = await pool.query(addSearch, values);
+
+        if (insertSearchQuery.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "An error occured adding the search query" });
+        }
+
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: "No results found" });
         }
@@ -44,4 +94,4 @@ const searchEngine = async (req, res) => {
 }
 
 
-module.exports = { searchEngine }
+module.exports = { searchEngine, deleteSearch, getPastSearches }
