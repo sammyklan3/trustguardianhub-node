@@ -20,14 +20,15 @@ const getTags = async (req, res) => {
 
 // Endpoint to create a tag
 const createTag = async (req, res) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ success: false, error: "Name is required" });
+    }
+
     try {
-        if (!req.body.name) {
-            return res.status(400).json({ success: false, error: "Name is required" });
-        }
 
         const tagId = generateRandomAlphanumericId(10);
-
-        const { name } = req.body;
 
         const checkQuery = "SELECT * FROM tags WHERE tag_name = $1";
         const checkValues = [name];

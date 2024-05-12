@@ -19,14 +19,14 @@ const getPastSearches = async (req, res) => {
     }
 }
 
-// Deleting from past searches
+// Deleting selectively from past searches
 const deleteSearch = async (req, res) => {
     try {
-        if (!req.params.id) {
-            return res.status(400).json({ success: false, error: "Search ID is required" });
-        }
-
         const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ success: false, error: "Search term Id is required"})
+        }
         const query = "DELETE FROM searches WHERE search_id = $1";
 
         const result = await pool.query(query, [id]);

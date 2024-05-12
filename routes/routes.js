@@ -48,7 +48,7 @@ router.get("/confirmPayment/:paymentId", verifyToken, accessToken, confirmPaymen
 // Search route
 router.get("/search", verifyToken, searchEngine);
 router.get("/pastSearches", verifyToken, getPastSearches);
-router.delete("/pastSearches", verifyToken, deleteSearch);
+router.delete("/pastSearches/:id", verifyToken, deleteSearch);
 
 // reset password route
 router.post("/forgot-password", verifyToken, forgotPassword);

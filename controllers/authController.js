@@ -59,12 +59,13 @@ const login = async (req, res) => {
 };
 
 
+// Signup logic
 const signup = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, phoneNumber, password } = req.body;
 
-        if (!username || !email || !password) {
-            return res.status(400).json({ success: false, error: "Username, email, and password are required." });
+        if (!username || !email || !password ||!phoneNumber) {
+            return res.status(400).json({ success: false, error: "Please fill in all fields" });
         }
 
         const userId = generateRandomAlphanumericId(10);
@@ -79,8 +80,8 @@ const signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const insertUserQuery = "INSERT INTO users (user_id, username, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING user_id, email, username";
-        const insertValues = [userId, username, email, hashedPassword];
+        const insertUserQuery = "INSERT INTO users (user_id, username, email, password_hash, phone) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, username";
+        const insertValues = [userId, username, email, hashedPassword, phoneNumber];
 
         const result = await pool.query(insertUserQuery, insertValues);
 
@@ -92,6 +93,7 @@ const signup = async (req, res) => {
     }
 };
 
+// Get all users form the db
 const getUsers = async (req, res) => {
     try {
         const query = "SELECT * FROM users";
@@ -108,7 +110,7 @@ const getUsers = async (req, res) => {
     }
 };
 
-// Method to get a user's profile
+// Method to get a specific user's profile
 const getProfile = async (req, res) => {
     try {
         if (!req.user.userId) {
@@ -136,6 +138,7 @@ const getProfile = async (req, res) => {
     }
 };
 
+// Update current profile
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user.userId;
