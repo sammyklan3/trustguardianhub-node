@@ -133,4 +133,4 @@ dist
 #chatapp.sql
 
 # Public folder
-public/*
+#public/
