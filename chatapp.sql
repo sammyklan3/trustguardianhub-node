@@ -4,12 +4,19 @@ CREATE TABLE users (
     user_id VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
+    firstName VARCHAR(50) NOT NULL,
+    lastName VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
+    phone VARCHAR(20) NOT NULL,
     tier VARCHAR(50) DEFAULT 'FREE',
     profile_url VARCHAR(255) DEFAULT 'profile_pic.png',
+    cover_url VARCHAR(255) DEFAULT 'cover_pic.png',
     reset_token VARCHAR(255),
     reset_token_expiry TIMESTAMP NULL,
+    location VARCHAR(255),
+    bio TEXT,
+    points INT DEFAULT 10,
+    ranking VARCHAR(10) NULL DEFAULT 'IRON' CHECK (ranking IN ('IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -21,6 +28,7 @@ CREATE TABLE reports (
     description TEXT,
     likes INT DEFAULT 0, -- Number of likes for the report
     image_url VARCHAR(255), -- New column to store image URL or file path
+    views INT DEFAULT 0, -- Number of views for the report
     user_id VARCHAR(50) REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) DEFAULT 'Pending' -- Status of the report (Pending, In Progress, Resolved, Closed)
@@ -84,8 +92,8 @@ CREATE TABLE payments (
     payment_purpose VARCHAR(50) NOT NULL,
     status VARCHAR(10) NOT NULL CHECK (status IN ('CONFIRMED', 'PENDING')),
     amount DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 );
 

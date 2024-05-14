@@ -6,6 +6,7 @@ const { adminDashboard, adminReports } = require("../controllers/adminController
 const { initiateSTKPush, stkPushCallback, confirmPayment } = require("../controllers/lipanampesaController");
 const { searchEngine, deleteSearch, getPastSearches, deleteAllSearches } = require("../controllers/searchEngineController");
 const { forgotPassword, resetPass } = require("../controllers/resetPasswordController");
+const { getUserProfile } = require("../controllers/userController");
 const { upload } = require("../config/multer");
 const { verifyToken, accessToken } = require("../config/middleware");
 
@@ -50,6 +51,9 @@ router.get("/search", verifyToken, searchEngine);
 router.get("/pastSearches", verifyToken, getPastSearches);
 router.delete("/pastSearches/:id", verifyToken, deleteSearch);
 router.delete("/clearHistory", verifyToken, deleteAllSearches);
+
+// User controller routes
+router.get("/user/:username", verifyToken, getUserProfile);
 
 // reset password route
 router.post("/forgot-password", verifyToken, forgotPassword);

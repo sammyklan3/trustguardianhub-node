@@ -62,9 +62,9 @@ const login = async (req, res) => {
 // Signup logic
 const signup = async (req, res) => {
     try {
-        const { username, email, phoneNumber, password } = req.body;
+        const { username, email, phoneNumber, password, firstName, lastName } = req.body;
 
-        if (!username || !email || !password ||!phoneNumber) {
+        if (!username || !email || !password ||!phoneNumber || !firstName || !lastName) {
             return res.status(400).json({ success: false, error: "Please fill in all fields" });
         }
 
@@ -80,8 +80,8 @@ const signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const insertUserQuery = "INSERT INTO users (user_id, username, email, password_hash, phone) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, username";
-        const insertValues = [userId, username, email, hashedPassword, phoneNumber];
+        const insertUserQuery = "INSERT INTO users (user_id, username, email, firstname, lastname, password_hash, phone) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, email, username";
+        const insertValues = [userId, username, email, firstName, lastName, hashedPassword, phoneNumber];
 
         const result = await pool.query(insertUserQuery, insertValues);
 
