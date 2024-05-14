@@ -1,8 +1,10 @@
+const { parse } = require("dotenv");
 const { pool } = require("../config/db");
 const { errorHandler, generateRandomAlphanumericId } = require("../config/middleware");
 
 // Get user profile data
 const getUserProfile = async (req, res) => {
+    const { userId } = req.user;
     const { username } = req.params;
 
     // Check if username is provided
@@ -25,6 +27,17 @@ const getUserProfile = async (req, res) => {
             return res.status(404).json({ success: false, error: `${username} not found` });
         };
 
+        // Get user's followers count
+        const followers = await pool.query("SELECT COUNT(*) FROM followers WHERE following_id = $1", [result.rows[0].user_id]);
+        const followersCount = parseInt(followers.rows[0].count);
+
+        // Get user's following count
+        const following = await pool.query("SELECT COUNT(*) FROM followers WHERE follower_id = $1", [result.rows[0].user_id]);
+        const followingCount = parseInt(following.rows[0].count);
+
+        // Check if you are following the user
+        const checkFollow = await pool.query("SELECT * FROM followers WHERE follower_id = $1 AND following_id = $2", [userId, result.rows[0].user_id]);
+
         // Extract user profile data, split the array data and related posts & construct full image URL for both profile and post images
         const host = req.get("host");
         const protocol = req.protocol;
@@ -36,6 +49,9 @@ const getUserProfile = async (req, res) => {
                 fullName: `${result.rows[0].firstname} ${result.rows[0].lastname}`,
                 email: result.rows[0].email,
                 bio: result.rows[0].bio,
+                followersCount,
+                followingCount,
+                checkFollow: checkFollow.rows.length > 0 ? true : false,
                 location: result.rows[0].location,
                 points: result.rows[0].points,
                 ranking: result.rows[0].ranking,

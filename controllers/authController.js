@@ -52,7 +52,7 @@ const login = async (req, res) => {
 
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "14d" });
 
-        return res.status(200).json({ success: true, message: "Successfully logged in", token});
+        return res.status(200).json({ success: true, message: "Successfully logged in", token });
     } catch (err) {
         errorHandler(err); // Pass error to the error handling middleware
     }
@@ -64,7 +64,7 @@ const signup = async (req, res) => {
     try {
         const { username, email, phoneNumber, password, firstName, lastName } = req.body;
 
-        if (!username || !email || !password ||!phoneNumber || !firstName || !lastName) {
+        if (!username || !email || !password || !phoneNumber || !firstName || !lastName) {
             return res.status(400).json({ success: false, error: "Please fill in all fields" });
         }
 
@@ -118,7 +118,7 @@ const getProfile = async (req, res) => {
         }
         const userId = req.user.userId;
 
-        const query = "SELECT user_id, email, username, profile_url, phone, tier FROM users WHERE user_id = $1";
+        const query = "SELECT user_id, email, username, phone, tier, profile_url, created_at, firstname, lastname, location, bio, points, cover_url, ranking FROM users WHERE user_id = $1";
         const values = [userId];
 
         const result = await pool.query(query, values);
@@ -127,10 +127,24 @@ const getProfile = async (req, res) => {
             return res.status(404).json({ success: false, error: "User not found" });
         }
 
+        // Count followers
+        const followersQuery = await pool.query('SELECT COUNT(*) FROM followers WHERE following_id = $1', [userId]);
+        const followersCount = parseInt(followersQuery.rows[0].count);
+
+        // Count following
+        const followingQuery = await pool.query('SELECT COUNT(*) FROM followers WHERE follower_id = $1', [userId]);
+        const followingCount = parseInt(followingQuery.rows[0].count);
+
         const host = req.get("host");
         const protocol = req.protocol;
 
+        // Add follower and following count to the result
+        result.rows[0].followers = followersCount;
+        result.rows[0].following = followingCount;
+
+        // Append the host and protocol to the profile and cover URL
         result.rows[0].profile_url = `${protocol}://${host}/public/${result.rows[0].profile_url}`;
+        result.rows[0].cover_url = `${protocol}://${host}/public/${result.rows[0].cover_url}`;
 
         res.status(200).json({ success: true, data: result.rows[0] });
     } catch (err) {

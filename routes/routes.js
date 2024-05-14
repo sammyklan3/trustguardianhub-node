@@ -7,6 +7,8 @@ const { initiateSTKPush, stkPushCallback, confirmPayment } = require("../control
 const { searchEngine, deleteSearch, getPastSearches, deleteAllSearches } = require("../controllers/searchEngineController");
 const { forgotPassword, resetPass } = require("../controllers/resetPasswordController");
 const { getUserProfile } = require("../controllers/userController");
+const { likePost, unlikePost } = require("../controllers/likeController");
+const { followUser, unfollowUser } = require("../controllers/followController");
 const { upload } = require("../config/multer");
 const { verifyToken, accessToken } = require("../config/middleware");
 
@@ -54,6 +56,14 @@ router.delete("/clearHistory", verifyToken, deleteAllSearches);
 
 // User controller routes
 router.get("/user/:username", verifyToken, getUserProfile);
+
+// Like controller routes
+router.post("/like/:reportId", verifyToken, likePost);
+router.delete("/unlike/:reportId", verifyToken, unlikePost);
+
+// Follow controller routes
+router.post("/follow/:followId", verifyToken, followUser);
+router.delete("/unfollow/:followId", verifyToken, unfollowUser);
 
 // reset password route
 router.post("/forgot-password", verifyToken, forgotPassword);

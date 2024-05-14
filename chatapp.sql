@@ -44,6 +44,28 @@ CREATE TABLE comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create followers table to allow users to follow other users
+CREATE TABLE followers (
+    follower_id VARCHAR(50) NOT NULL,
+    following_id VARCHAR(50) NOT NULL,
+    follow_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_id, following_id),
+    FOREIGN KEY (follower_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Create likes table to allow users to like reports
+CREATE TABLE likes (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    report_id VARCHAR(50) NOT NULL,
+    like_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, report_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (report_id) REFERENCES reports(report_id) ON DELETE CASCADE
+);
+
+
 -- Create tags table to categorize reports
 CREATE TABLE tags (
     id SERIAL PRIMARY KEY,
