@@ -13,7 +13,7 @@ const getUserProfile = async (req, res) => {
     try {
         // SQL query to retrieve user profile data and related posts from the database
         const query = `
-            SELECT u.user_id, u.username, u.firstname, u.lastname, u.email, u.location,u.profile_url, u.cover_url, u.ranking, u.created_at, u.points, r.*
+            SELECT u.user_id, u.username,u.bio, u.firstname, u.lastname, u.email, u.location,u.profile_url, u.cover_url, u.ranking, u.created_at, u.points, r.*
             FROM users u
             LEFT JOIN reports r ON u.user_id = r.user_id
             WHERE u.username = $1
