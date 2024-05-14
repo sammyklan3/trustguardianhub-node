@@ -7,7 +7,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     tier VARCHAR(50) DEFAULT 'FREE',
-    profile_url VARCHAR(255),
+    profile_url VARCHAR(255) DEFAULT 'profile_pic.png',
     reset_token VARCHAR(255),
     reset_token_expiry TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

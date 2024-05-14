@@ -22,6 +22,11 @@ const getReports = async (req, res, next) => {
         const host = req.get("host");
         const protocol = req.protocol;
 
+        // construct the full URL for the profile_pic
+        result.rows.forEach(report => {
+            report.profile_url = `${protocol}://${host}/public/${report.profile_url}`;
+        });
+
         // Add the protocol and host to each image URL
         const reportsWithUrlsAndUserDetails = result.rows.map(report => {
             return {
